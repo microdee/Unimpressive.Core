@@ -1,1 +1,0 @@
-"C:\ue4\UE_4.22\Engine\Binaries\DotNET\UnrealBuildTool.exe"  -projectfiles -project="%~dp0\UnrealityCore.uproject" -game -rocket -progress
