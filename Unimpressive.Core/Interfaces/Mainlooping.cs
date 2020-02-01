@@ -6,7 +6,7 @@ using System.Reactive.Disposables;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace md.stdl.Interfaces
+namespace Unimpressive.Core.Interfaces
 {
     /// <summary>
     /// An interface generalizing per-frame/mainlooping behavior

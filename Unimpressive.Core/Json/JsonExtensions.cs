@@ -8,7 +8,7 @@ using System.Xml;
 using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 
-namespace md.stdl.json
+namespace Unimpressive.Core.json
 {
     /// <summary>
     /// Collection of functions which makes life working with Json.NET better

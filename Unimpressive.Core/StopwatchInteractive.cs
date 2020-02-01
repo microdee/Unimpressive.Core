@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
-using md.stdl.Interfaces;
+using Unimpressive.Core.Interfaces;
 
 namespace Unimpressive.Core
 {

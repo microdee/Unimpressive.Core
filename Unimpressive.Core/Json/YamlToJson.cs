@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
 
-namespace md.stdl.json
+namespace Unimpressive.Core.json
 {
     /// <summary>
     /// Collection of methods dealing with YAML to Json.NET conversion

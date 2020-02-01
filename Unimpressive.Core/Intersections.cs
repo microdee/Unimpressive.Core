@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static System.Math;
 
-namespace md.stdl.Mathematics
+namespace Unimpressive.Core
 {
     /// <summary>
     /// Methods for intersections between primitives/solids

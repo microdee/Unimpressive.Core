@@ -5,9 +5,8 @@ using System.Net;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using md.stdl.Coding;
 
-namespace md.stdl.Network
+namespace Unimpressive.Core
 {
     /// <inheritdoc />
     /// <summary>
