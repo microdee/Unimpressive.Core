@@ -316,5 +316,19 @@ namespace Unimpressive.Core
             result = groups[capturename].Value;
             return groups;
         }
+
+        /// <summary>
+        /// Repeat string N times
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public static string RepeatN(this string input, int count)
+        {
+            var res = "";
+            for (int i = 0; i < count; i++)
+                res += input;
+            return res;
+        }
     }
 }
