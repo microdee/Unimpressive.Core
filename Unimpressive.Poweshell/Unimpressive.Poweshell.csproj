@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\pppm\Unimpressive.Core\Unimpressive.Core\Unimpressive.Core.csproj" />
+    <ProjectReference Include="..\Unimpressive.Core\Unimpressive.Core.csproj" />
   </ItemGroup>
 
 </Project>
