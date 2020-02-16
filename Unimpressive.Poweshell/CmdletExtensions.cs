@@ -1,15 +1,26 @@
-﻿using System;
+﻿using Humanizer;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Management.Automation;
+using System.Management.Automation.Host;
 using System.Management.Automation.Runspaces;
 using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Unimpressive.Poweshell
 {
+    public abstract class PSCmdletExtra : PSCmdlet
+    {
+        [Parameter(
+            HelpMessage = "This Cmdlet will not ask user input and will run with default choices."
+        )]
+        public SwitchParameter Unattended { get; set; }
+    }
+
     public static class CmdletExtensions
     {
         /// <summary>
@@ -88,6 +99,86 @@ namespace Unimpressive.Poweshell
             targetObj ??= cmdlet;
             var errrec = new ErrorRecord(new Exception(error), "SimpleStringError", errorCat, targetObj);
             cmdlet.WriteError(errrec);
+        }
+
+        /// <summary>
+        /// Use when the user needs to decide on possible options
+        /// It invokes <see cref="OnQuestion"/> where the implementer can either block uppm with user query or use the default value.
+        /// </summary>
+        /// <param name="question">Question to be asked from user</param>
+        /// <param name="caption">Displayed on top of the prompt</param>
+        /// <param name="possibilities">If null any input will be accepted. Otherwise input is compared to these possible entries.</param>
+        /// <param name="defaultValue">This value is used when user submits an empty input or in a potential unattended mode.</param>
+        /// <returns>User answer or default</returns>
+        public static string PromptForChoice(
+            this PSCmdlet cmdlet,
+            string question,
+            string caption = "",
+            IEnumerable<string> possibilities = null,
+            string defaultValue = "")
+        {
+            if (cmdlet is PSCmdletExtra cmdletex && cmdletex.Unattended.IsPresent)
+                return defaultValue;
+
+            if (string.IsNullOrWhiteSpace(caption)) caption = "User input is needed:";
+
+            if(possibilities == null)
+            {
+                var answer = cmdlet.Host.UI.Prompt(caption, question, new Collection<FieldDescription> {
+                    new FieldDescription("Answer")
+                    {
+                        DefaultValue = new PSObject(defaultValue),
+                        IsMandatory = true
+                    }
+                });
+                return answer["Answer"].BaseObject.ToString();
+            }
+            else
+            {
+                int defChoiceId = -1;
+                int i = 0;
+                foreach(var ch in possibilities)
+                {
+                    if (ch == defaultValue)
+                    {
+                        defChoiceId = i;
+                        break;
+                    }
+                    i++;
+                }
+                if (defChoiceId < 0)
+                {
+                    possibilities = possibilities.Prepend(defaultValue);
+                    defChoiceId = 0;
+                }
+
+                var choices = new Collection<ChoiceDescription>(possibilities.Select(p => new ChoiceDescription(p)).ToList());
+                var answerId = cmdlet.Host.UI.PromptForChoice(caption, question, choices, defChoiceId);
+                return choices[answerId].Label;
+            }
+        }
+
+        /// <summary>
+        /// Use when the user needs to decide on possible options
+        /// It invokes <see cref="OnQuestion"/> where the implementer can either block uppm with user query or use the default value.
+        /// </summary>
+        /// <typeparam name="T">Must be an enum</typeparam>
+        /// <param name="question">Question to be asked from user</param>
+        /// <param name="caption">Displayed on top of the prompt</param>
+        /// <param name="possibilities">If null any input will be accepted. Otherwise input is compared to these possible entries.</param>
+        /// <param name="defaultValue">This value is used when user submits an empty input or in a potential unattended mode.</param>
+        /// <returns>User answer or default</returns>
+        public static T PromptForEnum<T>(
+            this PSCmdlet cmdlet,
+            string question,
+            string caption = "",
+            IEnumerable<T> possibilities = null,
+            T defaultValue = default(T)) where T : struct
+        {
+            if (typeof(T).IsEnum) throw new ArgumentException($"{typeof(T)} type is not enum.");
+            var poss = possibilities == null ? Enum.GetNames(typeof(T)) : possibilities.Select(p => p.ToString());
+            var resstr = cmdlet.PromptForChoice(question, caption, poss, defaultValue.ToString());
+            return Enum.TryParse<T>(resstr, true, out var res) ? res : defaultValue;
         }
     }
 }
