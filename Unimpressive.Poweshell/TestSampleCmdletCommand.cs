@@ -5,6 +5,14 @@ using System.Management.Automation.Runspaces;
 
 namespace Unimpressive.Poweshell
 {
+    public enum ChoiceTestEnum
+    {
+        Yolo,
+        Swag,
+        Foo,
+        Bar
+    }
+
     [Cmdlet(VerbsDiagnostic.Test,"SampleCmdlet")]
     [OutputType(typeof(FavoriteStuff))]
     public class TestSampleCmdletCommand : PSCmdlet
@@ -35,6 +43,19 @@ Write-Error ""Shit hit the fan""
             {
                 WriteObject(psObject.BaseObject);
             }
+
+            var ch1 = this.PromptForChoice("What is your name?", defaultValue: "I have no name");
+            WriteObject($"Answered: {ch1}");
+
+            var ch2 = this.PromptForChoice("Choose a string", "This is a caption!", new[] { "Lorem", "Ipsum", "Dolor", "Sit Amet", "Consectetur"}, "default is not in choice");
+            WriteObject($"Answered: {ch2}");
+
+            var ch3 = this.PromptForEnum<ChoiceTestEnum>("Choose an enum");
+            WriteObject($"Answered: {ch3}");
+
+            bool yesall, noall;
+            bool cont = ShouldContinue("Does it make sense?", "A caption");
+            WriteObject(cont ? "apparently it does" : "naaah");
         }
 
         // This method will be called for each input received from the pipeline to this cmdlet; if no input is received, this method is not called

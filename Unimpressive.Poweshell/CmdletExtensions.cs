@@ -106,32 +106,38 @@ namespace Unimpressive.Poweshell
         /// It invokes <see cref="OnQuestion"/> where the implementer can either block uppm with user query or use the default value.
         /// </summary>
         /// <param name="question">Question to be asked from user</param>
-        /// <param name="caption">Displayed on top of the prompt</param>
+        /// <param name="note">Displayed on top of the prompt</param>
         /// <param name="possibilities">If null any input will be accepted. Otherwise input is compared to these possible entries.</param>
         /// <param name="defaultValue">This value is used when user submits an empty input or in a potential unattended mode.</param>
         /// <returns>User answer or default</returns>
         public static string PromptForChoice(
             this PSCmdlet cmdlet,
             string question,
-            string caption = "",
+            string note = "",
             IEnumerable<string> possibilities = null,
             string defaultValue = "")
         {
             if (cmdlet is PSCmdletExtra cmdletex && cmdletex.Unattended.IsPresent)
                 return defaultValue;
 
-            if (string.IsNullOrWhiteSpace(caption)) caption = "User input is needed:";
-
             if(possibilities == null)
             {
-                var answer = cmdlet.Host.UI.Prompt(caption, question, new Collection<FieldDescription> {
-                    new FieldDescription("Answer")
+                var message = string.IsNullOrWhiteSpace(note) ?
+                    $"    (default is {defaultValue})" :
+                    $"    {note}\n    (default is {defaultValue})";
+                var answer = cmdlet.Host.UI.Prompt(
+                    question, message,
+                    new Collection<FieldDescription>
                     {
-                        DefaultValue = new PSObject(defaultValue),
-                        IsMandatory = true
+                        new FieldDescription("Answer")
+                        {
+                            DefaultValue = new PSObject(defaultValue),
+                            IsMandatory = true
+                        }
                     }
-                });
-                return answer["Answer"].BaseObject.ToString();
+                )["Answer"].BaseObject.ToString();
+                if (string.IsNullOrWhiteSpace(answer)) return defaultValue;
+                return answer;
             }
             else
             {
@@ -153,7 +159,7 @@ namespace Unimpressive.Poweshell
                 }
 
                 var choices = new Collection<ChoiceDescription>(possibilities.Select(p => new ChoiceDescription(p)).ToList());
-                var answerId = cmdlet.Host.UI.PromptForChoice(caption, question, choices, defChoiceId);
+                var answerId = cmdlet.Host.UI.PromptForChoice(question, note, choices, defChoiceId);
                 return choices[answerId].Label;
             }
         }
@@ -164,20 +170,20 @@ namespace Unimpressive.Poweshell
         /// </summary>
         /// <typeparam name="T">Must be an enum</typeparam>
         /// <param name="question">Question to be asked from user</param>
-        /// <param name="caption">Displayed on top of the prompt</param>
+        /// <param name="note">Displayed on top of the prompt</param>
         /// <param name="possibilities">If null any input will be accepted. Otherwise input is compared to these possible entries.</param>
         /// <param name="defaultValue">This value is used when user submits an empty input or in a potential unattended mode.</param>
         /// <returns>User answer or default</returns>
         public static T PromptForEnum<T>(
             this PSCmdlet cmdlet,
             string question,
-            string caption = "",
+            string note = "",
             IEnumerable<T> possibilities = null,
             T defaultValue = default(T)) where T : struct
         {
-            if (typeof(T).IsEnum) throw new ArgumentException($"{typeof(T)} type is not enum.");
+            if (!typeof(T).IsEnum) throw new ArgumentException($"{typeof(T)} type is not enum.");
             var poss = possibilities == null ? Enum.GetNames(typeof(T)) : possibilities.Select(p => p.ToString());
-            var resstr = cmdlet.PromptForChoice(question, caption, poss, defaultValue.ToString());
+            var resstr = cmdlet.PromptForChoice(question, note, poss, defaultValue.ToString());
             return Enum.TryParse<T>(resstr, true, out var res) ? res : defaultValue;
         }
     }
